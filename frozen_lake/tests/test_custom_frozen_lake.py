@@ -1,5 +1,5 @@
 import pytest
-from frozen_lake import custom_frozen_lake
+from .. import custom_frozen_lake
 
 
 @pytest.mark.parametrize(

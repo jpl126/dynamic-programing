@@ -3,7 +3,7 @@ import numpy as np
 from typing import Set, Tuple
 
 
-from utils.environment import Environment
+from ..utils.environment import Environment
 
 
 class InvalidMoveException(Exception):
