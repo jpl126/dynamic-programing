@@ -1,12 +1,14 @@
-import numpy as np
-
 from typing import Set, Tuple
 
+import numpy as np
 
 from utils.environment import Environment
 
 
-class InvalidMoveException(Exception):
+class InvalidMoveException(ValueError):
+    """
+    Error raised when agent tries to take unpredicted action.
+    """
     pass
 
 
@@ -28,7 +30,7 @@ class FrozenLakeEnv(Environment):
 
     def __init__(self, grid_size: Tuple[int, int] = (4, 4),
                  holes_positions: Tuple[Tuple[int, int]] = (
-                         (1, 1), (1, 3), (2, 3), (3, 0)),
+                     (1, 1), (1, 3), (2, 3), (3, 0)),
                  start_position: Tuple[int, int] = (0, 0),
                  goal_position: Tuple[int, int] = (3, 3)):
 
@@ -76,15 +78,22 @@ class FrozenLakeEnv(Environment):
         reward = 0
         nearby_walls = self._get_walls_next_to_agent()
         if action not in nearby_walls:
-            self._set_agent_position(action)
-        observation = self._get_observation()
-        if observation == self._get_goal_observation():
+            self._change_agent_position(action)
+        if self.observation == self._get_goal_observation():
             done = True
             reward = 1
         elif self._is_agent_in_hole():
             done = True
 
-        return observation, reward, done, info
+        return self.observation, reward, done, info
+
+    @property
+    def observation(self):
+        return self._get_observation()
+
+    @observation.setter
+    def observation(self, state: int):
+        self._set_observation(state)
 
     def _get_walls_next_to_agent(self) -> Set[int]:
         """
@@ -127,7 +136,12 @@ class FrozenLakeEnv(Environment):
                        + self._agent_position[1])
         return observation
 
-    def _set_agent_position(self, direction: int):
+    def _set_observation(self, state: int):
+        # TODO: add check if state is legit
+        self._agent_position[0] = state // self._grid.shape[0]
+        self._agent_position[1] = state % self._grid.shape[1]
+
+    def _change_agent_position(self, direction: int):
         """
         Move agent to new position by one field. Rise an exception when agent
         leaves grid world.
