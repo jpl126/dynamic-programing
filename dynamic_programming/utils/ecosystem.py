@@ -9,6 +9,5 @@ class Ecosystem:
         self.agent = agent
         self.environment = environment
 
-    def get_transition_probability_matrix_for_policy(
-            self) -> np.array:
+    def get_transition_probability_matrix_for_policy(self) -> np.array:
         pass

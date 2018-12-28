@@ -30,10 +30,3 @@ class DiscreteAgent(Agent):
             self.policy = get_random_policy(actions_no)
         self.env_states_grid = env_states_grid
 
-    def policy(self, state: int) -> int:
-        """
-        Chooses action based on given state.
-        :param state: int representing state
-        :return: int describing taken action
-        """
-        pass

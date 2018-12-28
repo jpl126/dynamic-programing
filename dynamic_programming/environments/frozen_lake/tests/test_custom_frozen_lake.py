@@ -84,8 +84,8 @@ def test_get_goal_observation(example, expected_result):
     'example, expected_result',
     (
         (
-           2,
-           [0, 1]
+            2,
+            [0, 1]
         ),
         (
             1,
@@ -102,8 +102,8 @@ def test_change_agent_position(env, example, expected_result):
     'example, expected_result',
     (
         (
-           4,
-           [1, 0]
+            4,
+            [1, 0]
         ),
         (
             1,
@@ -120,8 +120,8 @@ def test_set_observation(env, example, expected_result):
     'example, expected_result',
     (
         (
-           2,
-           2
+            2,
+            2
         ),
         (
             1,
@@ -138,9 +138,9 @@ def test_get_observation(env, example, expected_result):
     'example, initial_position, expected_result',
     (
         (
-           2,
-           [0, 0],
-           (1, 0, False, {})
+            2,
+            [0, 0],
+            (1, 0, False, {})
         ),
         (
             1,

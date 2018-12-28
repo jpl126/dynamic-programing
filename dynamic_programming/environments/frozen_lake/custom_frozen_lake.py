@@ -1,12 +1,14 @@
-import numpy as np
-
 from typing import Set, Tuple
 
+import numpy as np
 
 from utils.environment import Environment
 
 
-class InvalidMoveException(Exception):
+class InvalidMoveException(ValueError):
+    """
+    Error raised when agent tries to take unpredicted action.
+    """
     pass
 
 
@@ -28,7 +30,7 @@ class FrozenLakeEnv(Environment):
 
     def __init__(self, grid_size: Tuple[int, int] = (4, 4),
                  holes_positions: Tuple[Tuple[int, int]] = (
-                         (1, 1), (1, 3), (2, 3), (3, 0)),
+                     (1, 1), (1, 3), (2, 3), (3, 0)),
                  start_position: Tuple[int, int] = (0, 0),
                  goal_position: Tuple[int, int] = (3, 3)):
 
@@ -135,6 +137,7 @@ class FrozenLakeEnv(Environment):
         return observation
 
     def _set_observation(self, state: int):
+        # TODO: add check if state is legit
         self._agent_position[0] = state // self._grid.shape[0]
         self._agent_position[1] = state % self._grid.shape[1]
 
