@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Callable
 
 from utils.policies import get_random_policy
 
@@ -21,7 +21,7 @@ class DiscreteAgent(Agent):
     def __init__(
             self,
             actions_no: int = 4,
-            policy: function = None,
+            policy: Callable = None,
             env_states_grid: Tuple[int, ...] = (4, 4)):
 
         if policy:
