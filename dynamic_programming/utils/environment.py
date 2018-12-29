@@ -17,7 +17,7 @@ class Environment:
 
     @property
     @abstractmethod
-    def actions(self):
+    def actions_count(self):
         pass
 
     @property
