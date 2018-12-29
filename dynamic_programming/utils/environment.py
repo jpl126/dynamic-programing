@@ -7,9 +7,25 @@ class Environment:
         pass
 
     @abstractmethod
-    def step(self):
+    def step(self, action, *args, **kwargs):
         pass
 
-    # @abstractmethod
-    # def set_agent_state(self):
-    #     pass
+    @property
+    @abstractmethod
+    def states_count(self):
+        pass
+
+    @property
+    @abstractmethod
+    def actions_count(self):
+        pass
+
+    @property
+    @abstractmethod
+    def observation(self):
+        pass
+
+    @observation.setter
+    @abstractmethod
+    def observation(self, *args, **kwargs):
+        pass

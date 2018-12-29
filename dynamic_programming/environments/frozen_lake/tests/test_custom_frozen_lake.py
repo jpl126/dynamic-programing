@@ -1,5 +1,6 @@
 import pytest
 from environments.frozen_lake import custom_frozen_lake
+from utils.errors import InvalidStateError, InvalidMoveError
 
 
 @pytest.fixture
@@ -28,36 +29,9 @@ def env():
         )
     )
 )
-def test_is_agent_next_to_wall(env, example, expected_result):
+def test_get_walls_next_to_agent(env, example, expected_result):
     env._agent_position = example
     result = env._get_walls_next_to_agent()
-    assert result == expected_result
-
-
-@pytest.mark.parametrize(
-    'example, expected_result',
-    (
-        (
-            [0, 0],
-            0
-        ),
-        (
-            [3, 3],
-            15
-        ),
-        (
-            [3, 1],
-            13
-        ),
-        (
-            [2, 2],
-            10
-        )
-    )
-)
-def test_get_observation(env, example, expected_result):
-    env._agent_position = example
-    result = env._get_observation()
     assert result == expected_result
 
 
@@ -99,6 +73,66 @@ def test_change_agent_position(env, example, expected_result):
 
 
 @pytest.mark.parametrize(
+    'example',
+    (
+        4,
+        5
+    )
+)
+def test_change_agent_position_error(env, example):
+    with pytest.raises(InvalidMoveError):
+        env._change_agent_position(example)
+
+
+@pytest.mark.parametrize(
+    'example, expected_result',
+    (
+        (
+            (1, 1),
+            [1, 1],
+        ),
+        (
+            (3, 3),
+            [3, 3],
+        )
+    )
+)
+def test_change_agent_position_in_hole_or_at_goal(example, expected_result):
+    env = custom_frozen_lake.FrozenLakeEnv(start_position=example)
+    for i in range(4):
+        env._change_agent_position(i)
+        assert env._agent_position == expected_result
+
+
+@pytest.mark.parametrize(
+    'example, expected_result',
+    (
+        (
+            [0, 0],
+            0
+        ),
+        (
+            [3, 3],
+            15
+        ),
+        (
+            [3, 1],
+            13
+        ),
+        (
+            [2, 2],
+            10
+        )
+    )
+)
+def test_get_observation(env, example, expected_result):
+    env._agent_position = example
+    result = env._get_observation()
+    assert result == expected_result
+    assert result == env.observation
+
+
+@pytest.mark.parametrize(
     'example, expected_result',
     (
         (
@@ -117,6 +151,18 @@ def test_set_observation(env, example, expected_result):
 
 
 @pytest.mark.parametrize(
+    'example',
+    (
+        16,
+        204
+    )
+)
+def test_set_observation_error(env, example):
+    with pytest.raises(InvalidStateError):
+        env.observation = example
+
+
+@pytest.mark.parametrize(
     'example, expected_result',
     (
         (
@@ -129,7 +175,7 @@ def test_set_observation(env, example, expected_result):
         )
     )
 )
-def test_get_observation(env, example, expected_result):
+def test_observation(env, example, expected_result):
     env.observation = example
     assert env.observation == expected_result
 
@@ -162,6 +208,11 @@ def test_get_observation(env, example, expected_result):
             [0, 1],
             (5, 0, True, {})
         ),
+        (
+            1,
+            [3, 3],
+            (15, 0, True, {})
+        ),
     )
 )
 def test_step(env, example, initial_position, expected_result):
@@ -187,3 +238,29 @@ def test_is_agent_in_hole(env, example, expected_result):
     env._agent_position = example
     result = env._is_agent_in_hole()
     assert result == expected_result
+
+
+def test_states_count(env):
+    assert env.states_count == 16
+
+
+def test_action_count(env):
+    assert env.actions_count == 4
+
+
+@pytest.mark.parametrize(
+    'example, expected_result',
+    (
+        (
+            (3, 3),
+            True
+        ),
+        (
+            (1, 1),
+            False
+        ),
+    )
+)
+def test_is_agent_at_goal(example, expected_result):
+    env = custom_frozen_lake.FrozenLakeEnv(start_position=example)
+    assert env._is_agent_at_goal() == expected_result
