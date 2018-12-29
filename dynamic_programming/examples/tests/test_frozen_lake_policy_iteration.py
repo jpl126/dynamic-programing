@@ -26,7 +26,7 @@ def test_find_value_function():
     result = []
     for state in range(16):
         state_actions = []
-        for _ in range(100):
+        for _ in range(50):
             state_actions.append(agent.policy(state))
         result.append(set(state_actions))
 

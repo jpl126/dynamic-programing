@@ -1,4 +1,4 @@
-from typing import Callable, Tuple
+from typing import Callable, List, Tuple
 
 import copy
 import numpy as np
@@ -54,7 +54,7 @@ class DiscreteAgent(Agent):
 
     def policy_iteration(self, iterations: int = 10):
         """
-        Applies Iterative Policy Evaluation and Greedy Policy Improvements to
+        Applies Bellman Expectation Equation and Greedy Policy Improvements to
         obtain optimal policy.
         Perform only one iteration of Policy Evaluation at each step.
         :param iterations: number of policy updates until stop.
@@ -121,6 +121,8 @@ class DiscreteAgent(Agent):
         Finds the best possible action or actions to perform in a given state.
 
         WORKS ONLY WHEN ACTION CAN MOVE AGENT TO ONLY ONE STATE (DETERMINISTIC)
+        TODO: do it iteratively to get approximation of best action
+        TODO: look -> self.get_best_action_reward_and_transitions()
 
         :param state: int describing environment state
         :return: tuple with all optimal actions
@@ -139,3 +141,95 @@ class DiscreteAgent(Agent):
             elif expected_return == max_expected_return:
                 actions.append(a)
         return tuple(actions)
+
+    def value_iteration(self, iterations: int = 10):
+        """
+        Applies Bellman Optimality Equation to obtain optimal policy.
+        :param iterations: number of value function updates until stop.
+        :return:
+        """
+        for _ in range(iterations):
+            self._apply_bellman_optimality_equation()
+
+        self.policy = self._create_greedy_policy()
+
+    def _apply_bellman_optimality_equation(self) -> np.array:
+        """
+        Applies Bellman Optimality Equation to find optimal value function.
+        :return: np.array[states_no] with new value function approximation
+        """
+        r_pi, p_pi = self._get_best_rewards_and_transition_matrix()
+        self.value_function = r_pi + self.gamma * p_pi.dot(
+            self.value_function)
+
+        return self.value_function
+
+    def _get_best_rewards_and_transition_matrix(
+            self) -> Tuple[np.array, np.array]:
+        """
+        Gets expected reward vector and transition probability matrix for
+        actions maximizing expected return.
+        They are used in the further Value Iteration.
+        Precision is based on self.iteration_no variable.
+
+        :return: expected_rewards, transition_matrix - where:
+        + expected_rewards: np.array[states_no] with expected rewards
+        + transition_matrix: np.array[states_no x states_no] with probabilities
+        """
+        env = copy.deepcopy(self.env)  # we cannot work on original environment
+        states_no = env.states_count
+
+        expected_rewards = np.array([0.0] * states_no)
+        transition_matrix = np.array([[0.0] * states_no] * states_no)
+        for _ in range(self.iteration_no):
+            iter_res = self.get_best_action_reward_and_transitions()
+            for state in range(self.states_count):
+                expected_rewards[state] += iter_res[state]['reward']
+                next_state = iter_res[state]['next_state']
+                transition_matrix[state][next_state] += 1.0
+
+        expected_rewards /= self.iteration_no
+        transition_matrix /= self.iteration_no
+        return expected_rewards, transition_matrix
+
+    def get_best_action_reward_and_transitions(self) -> List[dict]:
+        """
+        Returns single best action's reward and next state value function.
+        For deterministic problems it can be applied once, for stochastic
+        iterative application is required.
+        :return: dictionary as in example:
+            result = {
+                'expected_return': float,
+                'next_value_function': float,
+                'next_state': int,
+                'reward': float
+            }
+        """
+        env = copy.deepcopy(self.env)  # we cannot work on original environment
+        state_returns = []
+
+        for state in range(self.states_count):
+            result = {
+                'expected_return': -np.inf,
+                'next_value_function': 0.0,
+                'next_state': 0,
+                'reward': 0.0
+            }
+
+            for a in range(self.actions_count):
+                env.observation = state
+                next_state, reward, _, _ = env.step(a)
+                next_value_function = self.value_function[next_state]
+                expected_return = reward + self.gamma * next_value_function
+                if expected_return > result['expected_return']:
+                    result = {
+                        'expected_return': expected_return,
+                        'next_value_function': next_value_function,
+                        'next_state': next_state,
+                        'reward': reward
+                    }
+            state_returns.append(result)
+
+        return state_returns
+
+
