@@ -5,32 +5,36 @@ import numpy as np
 from utils.environment import Environment
 from utils.errors import InvalidMoveError, InvalidStateError
 
+# Possible cell types
+FROZEN_TYPE = 0
+START_TYPE = 1
+HOLE_TYPE = 2
+GOAL_TYPE = 3
+
+# Possible moves
+LEFT = 0
+DOWN = 1
+RIGHT = 2
+UP = 3
 
 MOVES = {
-    0: 'LEFT',
-    1: 'DOWN',
-    2: 'RIGHT',
-    3: 'UP'
+    LEFT: 'LEFT',
+    DOWN: 'DOWN',
+    RIGHT: 'RIGHT',
+    UP: 'UP'
 }
-
-FROZEN_POS = 0
-START_POS = 1
-HOLE_POS = 2
-GOAL_POS = 3
 
 
 class FrozenLakeEnv(Environment):
     """
     Frozen lake is an discrete environment for testing basic dynamic programing
-    methods.
-    Unlike openai gym for each transition agent receives -1 reward and 0 for
-    infinite loop at goal. Rest is mostly similar.
+    methods. Based on openai gym FrozenLake environment.
     """
     _INT_TO_CHAR = {
-        FROZEN_POS: 'F',
-        START_POS: 'S',
-        HOLE_POS: 'H',
-        GOAL_POS: 'G'
+        FROZEN_TYPE: 'F',
+        START_TYPE: 'S',
+        HOLE_TYPE: 'H',
+        GOAL_TYPE: 'G'
     }
 
     def __init__(self, grid_size: Tuple[int, int] = (4, 4),
@@ -43,11 +47,11 @@ class FrozenLakeEnv(Environment):
         self._goal_position = list(goal_position)
 
         # grid: 0 - frozen, 1 - start, 2 - hole, 3 - goal
-        self._grid = np.array([[FROZEN_POS] * grid_size[0]] * grid_size[1])
-        self._grid[start_position] = START_POS
-        self._grid[goal_position] = GOAL_POS
+        self._grid = np.array([[FROZEN_TYPE] * grid_size[0]] * grid_size[1])
+        self._grid[start_position] = START_TYPE
+        self._grid[goal_position] = GOAL_TYPE
         for hole in holes_positions:
-            self._grid[hole] = HOLE_POS
+            self._grid[hole] = HOLE_TYPE
 
     def render(self):
         """
@@ -83,16 +87,15 @@ class FrozenLakeEnv(Environment):
 
         done = False
         info = {}
-        reward = -1.0
+        reward = 0.0
         was_at_goal = self._is_agent_at_goal()
         nearby_walls = self._get_walls_next_to_agent()
 
         if action not in nearby_walls:
             self._change_agent_position(action)
-        if self._is_agent_at_goal() and was_at_goal:
-            reward = 0.0
-            done = True
-        elif self._is_agent_in_hole() or self._is_agent_at_goal():
+            if self._is_agent_at_goal() and not was_at_goal:
+                reward = 1.0
+        if self._is_agent_in_hole() or self._is_agent_at_goal():
             done = True
 
         return self.observation, reward, done, info
@@ -184,13 +187,13 @@ class FrozenLakeEnv(Environment):
         if self._is_agent_in_hole() or self._is_agent_at_goal():
             return
 
-        if direction == 0:
+        if direction == LEFT:
             self._agent_position[1] -= 1
-        elif direction == 2:
+        elif direction == RIGHT:
             self._agent_position[1] += 1
-        elif direction == 1:
+        elif direction == DOWN:
             self._agent_position[0] += 1
-        elif direction == 3:
+        elif direction == UP:
             self._agent_position[0] -= 1
         else:
             raise InvalidMoveError(f'Unrecognised action: {direction}')
@@ -202,7 +205,7 @@ class FrozenLakeEnv(Environment):
         """
         row_no = self._agent_position[0]
         col_no = self._agent_position[1]
-        if self._grid[row_no, col_no] == HOLE_POS:
+        if self._grid[row_no, col_no] == HOLE_TYPE:
             return True
         return False
 

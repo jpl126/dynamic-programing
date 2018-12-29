@@ -186,27 +186,27 @@ def test_observation(env, example, expected_result):
         (
             2,
             [0, 0],
-            (1, -1, False, {})
+            (1, 0, False, {})
         ),
         (
             1,
             [0, 0],
-            (4, -1, False, {})
+            (4, 0, False, {})
         ),
         (
             0,
             [0, 0],
-            (0, -1, False, {})
+            (0, 0, False, {})
         ),
         (
             2,
             [3, 2],
-            (15, -1, True, {})
+            (15, 1, True, {})
         ),
         (
             1,
             [0, 1],
-            (5, -1, True, {})
+            (5, 0, True, {})
         ),
         (
             1,
