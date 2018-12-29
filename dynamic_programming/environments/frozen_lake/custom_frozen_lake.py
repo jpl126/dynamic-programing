@@ -63,7 +63,8 @@ class FrozenLakeEnv(Environment):
 
         print(text_grid)
 
-    def step(self, action: int) -> Tuple[int, float, bool, dict]:
+    def step(self, action: int, *args,
+             **kwargs) -> Tuple[int, float, bool, dict]:
         """
         Gives environment response to agent's action.
         :param action: move direction according to MOVES variable
@@ -73,16 +74,19 @@ class FrozenLakeEnv(Environment):
         True if episode is finished False otherwise,
         info: your info for debugging
         """
+        del args, kwargs  # unused
+
         done = False
         info = {}
-        reward = 0
+        reward = 0.0
+        was_at_goal = self._is_agent_at_goal()
         nearby_walls = self._get_walls_next_to_agent()
+
         if action not in nearby_walls:
             self._change_agent_position(action)
-        if self.observation == self._get_goal_observation():
-            done = True
-            reward = 1
-        elif self._is_agent_in_hole():
+            if self._is_agent_at_goal() and not was_at_goal:
+                reward = 1.0
+        if self._is_agent_in_hole() or self._is_agent_at_goal():
             done = True
 
         return self.observation, reward, done, info
@@ -92,8 +96,17 @@ class FrozenLakeEnv(Environment):
         return self._get_observation()
 
     @observation.setter
-    def observation(self, state: int):
+    def observation(self, state: int, *args, **kwargs):
+        del args, kwargs  # unused
         self._set_observation(state)
+
+    @property
+    def states_count(self):
+        return sum(len(x) for x in self._grid)
+
+    @property
+    def actions(self) -> int:
+        return 4
 
     def _get_walls_next_to_agent(self) -> Set[int]:
         """
@@ -149,7 +162,10 @@ class FrozenLakeEnv(Environment):
         :return: None
         """
         if direction in self._get_walls_next_to_agent():
-            raise InvalidMoveException
+            return
+
+        if self._is_agent_in_hole() or self._is_agent_at_goal():
+            return
 
         if direction == 0:
             self._agent_position[1] -= 1
@@ -172,3 +188,10 @@ class FrozenLakeEnv(Environment):
         if self._grid[row_no, col_no] == 2:
             return True
         return False
+
+    def _is_agent_at_goal(self):
+        """
+        Check if agent reached the goal
+        :return: True if yes, False otherwise
+        """
+        return self.observation == self._get_goal_observation()
