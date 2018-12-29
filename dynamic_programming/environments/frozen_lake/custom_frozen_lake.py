@@ -3,13 +3,7 @@ from typing import Set, Tuple
 import numpy as np
 
 from utils.environment import Environment
-
-
-class InvalidMoveException(ValueError):
-    """
-    Error raised when agent tries to take unpredicted action.
-    """
-    pass
+from utils.errors import InvalidMoveError, InvalidStateError
 
 
 MOVES = {
@@ -19,13 +13,24 @@ MOVES = {
     3: 'UP'
 }
 
+FROZEN_POS = 0
+START_POS = 1
+HOLE_POS = 2
+GOAL_POS = 3
+
 
 class FrozenLakeEnv(Environment):
+    """
+    Frozen lake is an discrete environment for testing basic dynamic programing
+    methods.
+    Unlike openai gym for each transition agent receives -1 reward and 0 for
+    infinite loop at goal. Rest is mostly similar.
+    """
     _INT_TO_CHAR = {
-        0: 'F',
-        1: 'S',
-        2: 'H',
-        3: 'G'
+        FROZEN_POS: 'F',
+        START_POS: 'S',
+        HOLE_POS: 'H',
+        GOAL_POS: 'G'
     }
 
     def __init__(self, grid_size: Tuple[int, int] = (4, 4),
@@ -38,11 +43,11 @@ class FrozenLakeEnv(Environment):
         self._goal_position = list(goal_position)
 
         # grid: 0 - frozen, 1 - start, 2 - hole, 3 - goal
-        self._grid = np.array([[0] * grid_size[0]] * grid_size[1])
-        self._grid[start_position] = 1
-        self._grid[goal_position] = 3
+        self._grid = np.array([[FROZEN_POS] * grid_size[0]] * grid_size[1])
+        self._grid[start_position] = START_POS
+        self._grid[goal_position] = GOAL_POS
         for hole in holes_positions:
-            self._grid[hole] = 2
+            self._grid[hole] = HOLE_POS
 
     def render(self):
         """
@@ -78,34 +83,41 @@ class FrozenLakeEnv(Environment):
 
         done = False
         info = {}
-        reward = 0.0
+        reward = -1.0
         was_at_goal = self._is_agent_at_goal()
         nearby_walls = self._get_walls_next_to_agent()
 
         if action not in nearby_walls:
             self._change_agent_position(action)
-            if self._is_agent_at_goal() and not was_at_goal:
-                reward = 1.0
-        if self._is_agent_in_hole() or self._is_agent_at_goal():
+        if self._is_agent_at_goal() and was_at_goal:
+            reward = 0.0
+            done = True
+        elif self._is_agent_in_hole() or self._is_agent_at_goal():
             done = True
 
         return self.observation, reward, done, info
 
     @property
     def observation(self):
+        """Returns environment's state"""
         return self._get_observation()
 
     @observation.setter
     def observation(self, state: int, *args, **kwargs):
+        """Sets environment's state"""
         del args, kwargs  # unused
         self._set_observation(state)
 
     @property
     def states_count(self):
+        """Returns number of all possible states in the environment"""
         return sum(len(x) for x in self._grid)
 
     @property
-    def actions(self) -> int:
+    def actions_count(self) -> int:
+        """
+        Returns number of all possible actions to perform in the environment
+        """
         return 4
 
     def _get_walls_next_to_agent(self) -> Set[int]:
@@ -133,7 +145,7 @@ class FrozenLakeEnv(Environment):
 
     def _get_goal_observation(self) -> int:
         """
-        Returns goal state (grid cell) as an integer.
+        Returns goal state as an integer.
         :return: int describing current state
         """
         observation = (self._goal_position[0] * self._grid.shape[1]
@@ -142,7 +154,7 @@ class FrozenLakeEnv(Environment):
 
     def _get_observation(self) -> int:
         """
-        Returns current state (grid cell) as an integer.
+        Returns current state as an integer.
         :return: int describing current state
         """
         observation = (self._agent_position[0] * self._grid.shape[0]
@@ -150,7 +162,13 @@ class FrozenLakeEnv(Environment):
         return observation
 
     def _set_observation(self, state: int):
-        # TODO: add check if state is legit
+        """
+        Sets environment's state. Rise an exception when given state is exceeds
+        number of possible states
+        """
+        if state >= self.states_count:
+            raise InvalidStateError(
+                f'Given state: {state} exceeds number of possible states')
         self._agent_position[0] = state // self._grid.shape[0]
         self._agent_position[1] = state % self._grid.shape[1]
 
@@ -159,7 +177,6 @@ class FrozenLakeEnv(Environment):
         Move agent to new position by one field. Rise an exception when agent
         leaves grid world.
         :param direction: direction according to MOVES variable
-        :return: None
         """
         if direction in self._get_walls_next_to_agent():
             return
@@ -176,22 +193,22 @@ class FrozenLakeEnv(Environment):
         elif direction == 3:
             self._agent_position[0] -= 1
         else:
-            raise InvalidMoveException
+            raise InvalidMoveError(f'Unrecognised action: {direction}')
 
     def _is_agent_in_hole(self):
         """
-        Check if agent felt into a hole
+        Check if agent felt into a hole.
         :return: True if agent is in the hole, False otherwise
         """
         row_no = self._agent_position[0]
         col_no = self._agent_position[1]
-        if self._grid[row_no, col_no] == 2:
+        if self._grid[row_no, col_no] == HOLE_POS:
             return True
         return False
 
     def _is_agent_at_goal(self):
         """
-        Check if agent reached the goal
+        Check if agent reached the goal.
         :return: True if yes, False otherwise
         """
         return self.observation == self._get_goal_observation()
