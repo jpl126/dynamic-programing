@@ -18,8 +18,6 @@ def right_policy(state: int) -> int:
     del state  # unused
     return RIGHT
 
-from utils.policies import get_random_policy
-right_policy = get_random_policy(4)
 
 def find_value_function(
         policy: Callable = right_policy,
