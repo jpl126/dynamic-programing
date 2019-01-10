@@ -10,6 +10,10 @@ class Environment:
     def step(self, action, *args, **kwargs):
         pass
 
+    @abstractmethod
+    def reset(self):
+        pass
+
     @property
     @abstractmethod
     def states_count(self):

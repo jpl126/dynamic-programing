@@ -5,7 +5,7 @@ going always right.
 from typing import Callable
 
 from environments.frozen_lake.custom_frozen_lake import FrozenLakeEnv, RIGHT
-from utils.agents import DiscreteAgent
+from utils.DP_agents import DiscreteAgent
 from utils.environment import Environment
 
 
@@ -18,6 +18,8 @@ def right_policy(state: int) -> int:
     del state  # unused
     return RIGHT
 
+from utils.policies import get_random_policy
+right_policy = get_random_policy(4)
 
 def find_value_function(
         policy: Callable = right_policy,

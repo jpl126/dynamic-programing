@@ -6,7 +6,7 @@ import os
 import time
 
 from environments.frozen_lake.custom_frozen_lake import FrozenLakeEnv
-from utils.agents import DiscreteAgent
+from utils.DP_agents import DiscreteAgent
 from utils.environment import Environment
 
 

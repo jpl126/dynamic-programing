@@ -264,3 +264,22 @@ def test_action_count(env):
 def test_is_agent_at_goal(example, expected_result):
     env = custom_frozen_lake.FrozenLakeEnv(start_position=example)
     assert env._is_agent_at_goal() == expected_result
+
+
+@pytest.mark.parametrize(
+    'example, expected_result',
+    (
+        (
+            (3, 3),
+            15,
+        ),
+        (
+            (1, 1),
+            5,
+        ),
+    )
+)
+def test_reset(example, expected_result):
+    env = custom_frozen_lake.FrozenLakeEnv(start_position=example)
+    env.reset()
+    assert env.observation == expected_result

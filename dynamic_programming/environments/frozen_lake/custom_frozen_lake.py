@@ -50,6 +50,8 @@ class FrozenLakeEnv(Environment):
         self._grid = np.array([[FROZEN_TYPE] * grid_size[0]] * grid_size[1])
         self._grid[start_position] = START_TYPE
         self._grid[goal_position] = GOAL_TYPE
+        self.start_state = self._get_observation()
+
         for hole in holes_positions:
             self._grid[hole] = HOLE_TYPE
 
@@ -122,6 +124,9 @@ class FrozenLakeEnv(Environment):
         Returns number of all possible actions to perform in the environment
         """
         return 4
+
+    def reset(self):
+        self._set_observation(self.start_state)
 
     def _get_walls_next_to_agent(self) -> Set[int]:
         """
